@@ -4,8 +4,7 @@ using FilmowaBaza.Data;
 using FilmowaBaza.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using System.IO;
-using System.Xml.Serialization;
+
 
 namespace FilmowaBaza.Controllers
 {
