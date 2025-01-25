@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Xml.Serialization;
+
 
 namespace FilmowaBaza.Models
 {
@@ -23,12 +23,8 @@ namespace FilmowaBaza.Models
         [MaxLength(50)]
         public string Country_of_origin { get; set; } // Kraj produkcji 
     }
-    [XmlRoot("Movies")]
-    public class MovieList
-    {
-        [XmlElement("Movie")]
-        public List<Movie> Movies { get; set; }
-    }
+   
+    
 }
 
 
