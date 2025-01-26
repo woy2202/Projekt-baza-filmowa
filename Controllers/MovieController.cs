@@ -10,6 +10,7 @@ public class MoviesController : ControllerBase
 {
     private static readonly List<Movie> Movies = new();
 
+    // Pobieranie wszystkich filmów
     [HttpGet]
     public IActionResult GetAllMovies()
     {
@@ -23,6 +24,34 @@ public class MoviesController : ControllerBase
         }
     }
 
+    // Pobieranie filmów po tytule
+    [HttpGet("search")]
+    public IActionResult GetMoviesByTitle([FromQuery] string title)
+    {
+        try
+        {
+            if (string.IsNullOrEmpty(title))
+            {
+                return BadRequest(new { message = "Tytuł nie może być pusty." });
+            }
+
+            // Filtrujemy filmy na podstawie tytułu
+            var filteredMovies = Movies.Where(m => m.Title.Contains(title, StringComparison.OrdinalIgnoreCase)).ToList();
+
+            if (filteredMovies.Count == 0)
+            {
+                return NotFound(new { message = "Nie znaleziono filmów pasujących do podanego tytułu." });
+            }
+
+            return Ok(filteredMovies);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Wystąpił błąd serwera.", details = ex.Message });
+        }
+    }
+
+    // Dodawanie filmu
     [HttpPost]
     public IActionResult AddMovie([FromBody] Movie movie)
     {
@@ -44,6 +73,7 @@ public class MoviesController : ControllerBase
         }
     }
 
+    // Pobieranie filmu po ID
     [HttpGet("{id}")]
     public IActionResult GetMovieById(int id)
     {
@@ -63,6 +93,7 @@ public class MoviesController : ControllerBase
         }
     }
 
+    // Aktualizacja filmu
     [HttpPut("{id}")]
     public IActionResult UpdateMovie(int id, [FromBody] Movie updatedMovie)
     {
@@ -94,6 +125,7 @@ public class MoviesController : ControllerBase
         }
     }
 
+    // Usuwanie filmu
     [HttpDelete("{id}")]
     public IActionResult DeleteMovie(int id)
     {
