@@ -1,30 +1,29 @@
-﻿using System.ComponentModel.DataAnnotations;
-
+using System.ComponentModel.DataAnnotations;
 
 namespace FilmowaBaza.Models
 {
     public class Movie
     {
-        public int Id { get; set; } // Id filmu
+        public int Id { get; set; }
 
         [Required]
         [MaxLength(255)]
-        public string Title { get; set; } // Tytuł filmu
+        public string Title { get; set; }
 
         [Required]
-        public int ReleaseYear { get; set; } // Rok produkcji
+        public int ReleaseYear { get; set; }
 
         [Required]
         [MaxLength(100)]
-        public string Director { get; set; } // Reżyser
+        public string Director { get; set; }
 
         [MaxLength(50)]
-        public string Genre { get; set; } // Gatunek
+        public string Genre { get; set; }
+
         [MaxLength(50)]
-        public string Country_of_origin { get; set; } // Kraj produkcji 
+        public string Country_of_origin { get; set; }
+
+        [MaxLength(255)]
+        public string PosterUrl { get; set; }
     }
-   
-    
 }
-
-
