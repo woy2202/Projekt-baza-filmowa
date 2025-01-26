@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.5.3/js/bootstrap.min.js" integrity="sha512-8qmis31OQi6hIRgvkht0s6mCOittjMa9GMqtK9hes5iEQBQE/Ca6yGE5FsW36vyipGoWQswBj/QBm2JR086Rkw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.5.3/css/bootstrap.min.css" integrity="sha512-oc9+XSs1H243/FRN9Rw62Fn8EtxjEYWHXRvjS43YtueEewbS6ObfXcJNyohjHqVKFPoXXUxwc+q1K7Dee6vv9g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <title>Baza filmowa - ASP.Net Core Web Api</title>
+    <style>
+        .movie-item {
+            position: relative;
+            display: inline-block;
+            margin: 10px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .movie-poster {
+            width: 150px;
+            height: 220px;
+            object-fit: cover;
+            border-radius: 8px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .movie-poster:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .movie-info {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+            border-radius: 8px;
+        }
+
+        .movie-item:hover .movie-info {
+            opacity: 1;
+        }
+
+        .details-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: none;
+            z-index: 1000;
+        }
+
+        .details-popup h4 {
+            margin-bottom: 15px;
+        }
+
+        .details-popup button {
+            margin-right: 10px;
+        }
+
+        .details-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+        <h2>FILMY</h2>
+        <div id="movie-list" class="d-flex flex-wrap"></div>
+
+        <div class="mt-3">
+            <h3>Dodaj film</h3>
+            <form id="movie-form">
+                <div class="form-group">
+                    <label for="title">Tytuł</label>
+                    <input type="text" class="form-control" id="title" required>
+                </div>
+                <div class="form-group">
+                    <label for="releaseYear">Rok produkcji</label>
+                    <input type="number" class="form-control" id="releaseYear" required>
+                </div>
+                <div class="form-group">
+                    <label for="director">Reżyser</label>
+                    <input type="text" class="form-control" id="director" required>
+                </div>
+                <div class="form-group">
+                    <label for="genre">Gatunek</label>
+                    <input type="text" class="form-control" id="genre" required>
+                </div>
+                <div class="form-group">
+                    <label for="countryOfOrigin">Kraj produkcji</label>
+                    <input type="text" class="form-control" id="countryOfOrigin" required>
+                </div>
+                <div class="form-group">
+                    <label for="posterUrl">Link do plakatu</label>
+                    <input type="url" class="form-control" id="posterUrl" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Dodaj film</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="details-overlay"></div>
+    <div class="details-popup">
+        <h4 id="popup-title"></h4>
+        <p id="popup-info"></p>
+        <button class="btn btn-warning" id="edit-button">Edytuj</button>
+        <button class="btn btn-danger" id="delete-button">Usuń</button>
+        <button class="btn btn-secondary" id="close-button">Zamknij</button>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            function fetchMovies() {
+                $.ajax({
+                    url: 'https://localhost:7117/api/Movies',
+                    method: 'GET',
+                    success: function(movies) {
+                        $('#movie-list').empty();
+                        movies.forEach(function(movie) {
+                            $('#movie-list').append(`
+                                <div class="movie-item" data-id="${movie.id}" data-title="${movie.title}" data-year="${movie.releaseYear}" data-director="${movie.director}" data-genre="${movie.genre}" data-country="${movie.country_of_origin}">
+                                    <img src="${movie.posterUrl}" alt="Plakat filmu" class="movie-poster">
+                                    <div class="movie-info">
+                                        <h5>${movie.title}</h5>
+                                        <p>${movie.releaseYear}</p>
+                                    </div>
+                                </div>
+                            `);
+                        });
+                    },
+                    error: function() {
+                        alert('Nie udało się pobrać listy filmów.');
+                    }
+                });
+            }
+
+            fetchMovies();
+
+            $('#movie-list').on('click', '.movie-item', function() {
+                const movieId = $(this).data('id');
+                const movieTitle = $(this).data('title');
+                const movieYear = $(this).data('year');
+                const movieDirector = $(this).data('director');
+                const movieGenre = $(this).data('genre');
+                const movieCountry = $(this).data('country');
+
+                $('#popup-title').text(`${movieTitle} (${movieYear})`);
+                $('#popup-info').html(`
+                    <strong>Reżyser:</strong> ${movieDirector}<br>
+                    <strong>Gatunek:</strong> ${movieGenre}<br>
+                    <strong>Kraj produkcji:</strong> ${movieCountry}
+                `);
+
+                $('#edit-button').off('click').on('click', function() {
+                    editMovie(movieId);
+                });
+
+                $('#delete-button').off('click').on('click', function() {
+                    deleteMovie(movieId);
+                });
+
+                $('.details-overlay, .details-popup').fadeIn();
+            });
+
+            $('#close-button').on('click', function() {
+                $('.details-overlay, .details-popup').fadeOut();
+            });
+
+            $('#movie-form').submit(function(event) {
+                event.preventDefault();
+
+                const movie = {
+                    title: $('#title').val(),
+                    releaseYear: $('#releaseYear').val(),
+                    director: $('#director').val(),
+                    genre: $('#genre').val(),
+                    country_of_origin: $('#countryOfOrigin').val(),
+                    posterUrl: $('#posterUrl').val()
+                };
+
+                $.ajax({
+                    url: 'https://localhost:7117/api/Movies',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(movie),
+                    success: function() {
+                        fetchMovies();
+                        $('#movie-form')[0].reset();
+                    },
+                    error: function() {
+                        alert('Nie udało się dodać filmu.');
+                    }
+                });
+            });
+
+            function editMovie(id) {
+                const newTitle = prompt("Nowy tytuł filmu:");
+                const newReleaseYear = prompt("Nowy rok produkcji:");
+                const newDirector = prompt("Nowy reżyser:");
+                const newGenre = prompt("Nowy gatunek:");
+                const newCountryOfOrigin = prompt("Nowy kraj produkcji:");
+                const newPosterUrl = prompt("Nowy link do plakatu:");
+
+                if (newTitle && newReleaseYear && newDirector && newGenre && newCountryOfOrigin && newPosterUrl) {
+                    $.ajax({
+                        url: `https://localhost:7117/api/Movies/${id}`,
+                        method: 'PUT',
+                        contentType: 'application/json',
+                        data: JSON.stringify({
+                            id: id,
+                            title: newTitle,
+                            releaseYear: newReleaseYear,
+                            director: newDirector,
+                            genre: newGenre,
+                            country_of_origin: newCountryOfOrigin,
+                            posterUrl: newPosterUrl
+                        }),
+                        success: function() {
+                            fetchMovies();
+                            $('.details-overlay, .details-popup').fadeOut();
+                        },
+                        error: function() {
+                            alert('Nie udało się zaktualizować filmu.');
+                        }
+                    });
+                }
+            }
+
+            function deleteMovie(id) {
+                if (confirm("Czy na pewno chcesz usunąć ten film?")) {
+                    $.ajax({
+                        url: `https://localhost:7117/api/Movies/${id}`,
+                        method: 'DELETE',
+                        success: function() {
+                            fetchMovies();
+                            $('.details-overlay, .details-popup').fadeOut();
+                        },
+                        error: function() {
+                            alert('Nie udało się usunąć filmu.');
+                        }
+                    });
+                }
+            }
+        });
+    </script>
+</body>
+</html>
+
