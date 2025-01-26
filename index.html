@@ -52,6 +52,19 @@
                 <button type="submit" class="btn btn-primary">Dodaj film</button>
             </form>
         </div>
+
+        <div class="mt-3">
+            <h3>Szukaj filmu</h3>
+            <form id="get-movie-form">
+                <div class="form-group">
+                    <label for="movieTitle">Tytuł filmu</label>
+                    <input type="text" class="form-control" id="movieTitle" required>
+                </div>
+                <button type="submit" class="btn btn-info">Szukaj</button>
+            </form>
+
+            <div id="movie-details" class="mt-4"></div>
+        </div>
     </div>
 
     <script>
@@ -157,6 +170,38 @@
                     });
                 }
             };
+
+            
+            $('#get-movie-form').submit(function(event) {
+                event.preventDefault();
+
+                const movieTitle = $('#movieTitle').val(); 
+
+                $.ajax({
+                    url: `https://localhost:7117/api/Movies/search?title=${movieTitle}`,
+                    method: 'GET',
+                    success: function(movies) {
+                       
+                        if (movies.length === 0) {
+                            $('#movie-details').html('<p>Nie znaleziono filmu o takim tytule.</p>');
+                        } else {
+                            
+                            const movie = movies[0]; 
+                            $('#movie-details').html(`
+                                <h4>Film: ${movie.title}</h4>
+                                <p><strong>Rok produkcji:</strong> ${movie.releaseYear}</p>
+                                <p><strong>Reżyser:</strong> ${movie.director}</p>
+                                <p><strong>Gatunek:</strong> ${movie.genre}</p>
+                                <p><strong>Kraj produkcji:</strong> ${movie.country_of_origin}</p>
+                                <img src="${movie.posterUrl}" alt="Plakat filmu" class="movie-poster">
+                            `);
+                        }
+                    },
+                    error: function() {
+                        alert('Nie udało się pobrać filmu.');
+                    }
+                });
+            });
         });
     </script>
 </body>
