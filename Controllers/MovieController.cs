@@ -1,123 +1,116 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using FilmowaBaza.Data;
 using FilmowaBaza.Models;
 
-namespace FilmowaBaza.Controllers
+[ApiController]
+[Route("api/[controller]")]
+public class MoviesController : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class MoviesController : ControllerBase
+    private static readonly List<Movie> Movies = new();
+
+    [HttpGet]
+    public IActionResult GetAllMovies()
     {
-        private readonly MovieContext _context;
-
-        public MoviesController(MovieContext context)
+        try
         {
-            _context = context;
+            return Ok(Movies);
         }
-
-        
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Movie>>> GetMovies()
+        catch (Exception ex)
         {
-            return await _context.Movies.ToListAsync();
+            return StatusCode(500, new { message = "Wystąpił błąd serwera.", details = ex.Message });
         }
+    }
 
-        
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Movie>> GetMovie(int id)
+    [HttpPost]
+    public IActionResult AddMovie([FromBody] Movie movie)
+    {
+        try
         {
-            var movie = await _context.Movies.FindAsync(id);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new { message = "Nieprawidłowe dane filmu.", errors = ModelState });
+            }
 
+            movie.Id = Movies.Count > 0 ? Movies.Max(m => m.Id) + 1 : 1;
+            Movies.Add(movie);
+
+            return CreatedAtAction(nameof(GetMovieById), new { id = movie.Id }, movie);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Wystąpił błąd serwera.", details = ex.Message });
+        }
+    }
+
+    [HttpGet("{id}")]
+    public IActionResult GetMovieById(int id)
+    {
+        try
+        {
+            var movie = Movies.FirstOrDefault(m => m.Id == id);
             if (movie == null)
             {
-                return NotFound();
+                return NotFound(new { message = "Nie znaleziono filmu." });
             }
 
             return Ok(movie);
         }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Wystąpił błąd serwera.", details = ex.Message });
+        }
+    }
 
-        
-        [HttpPost]
-        public async Task<ActionResult<Movie>> CreateMovie(Movie movie)
+    [HttpPut("{id}")]
+    public IActionResult UpdateMovie(int id, [FromBody] Movie updatedMovie)
+    {
+        try
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(new { message = "Nieprawidłowe dane filmu.", errors = ModelState });
             }
 
-            _context.Movies.Add(new Movie
-            {
-                Title = movie.Title,
-                ReleaseYear = movie.ReleaseYear,
-                Director = movie.Director,
-                Genre = movie.Genre,
-                Country_of_origin = movie.Country_of_origin,
-                PosterUrl = movie.PosterUrl 
-            });
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetMovie), new { id = movie.Id }, movie);
-        }
-
-
-        
-        public async Task<IActionResult> EditMovie(int id, Movie movie)
-        {
-            if (id != movie.Id)
-            {
-                return BadRequest("Movie ID mismatch.");
-            }
-
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            var movieInDb = await _context.Movies.FindAsync(id);
-
-            if (movieInDb == null)
-            {
-                return NotFound();
-            }
-
-            movieInDb.Title = movie.Title;
-            movieInDb.ReleaseYear = movie.ReleaseYear;
-            movieInDb.Director = movie.Director;
-            movieInDb.Genre = movie.Genre;
-            movieInDb.Country_of_origin = movie.Country_of_origin;
-
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteMovie(int id)
-        {
-            var movie = await _context.Movies.FindAsync(id);
-
+            var movie = Movies.FirstOrDefault(m => m.Id == id);
             if (movie == null)
             {
-                return NotFound();
+                return NotFound(new { message = "Nie znaleziono filmu do aktualizacji." });
             }
 
-            _context.Movies.Remove(movie);
-            await _context.SaveChangesAsync();
+            movie.Title = updatedMovie.Title;
+            movie.ReleaseYear = updatedMovie.ReleaseYear;
+            movie.Director = updatedMovie.Director;
+            movie.Genre = updatedMovie.Genre;
+            movie.Country_of_origin = updatedMovie.Country_of_origin;
+            movie.PosterUrl = updatedMovie.PosterUrl;
 
+            return Ok(movie);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Wystąpił błąd serwera.", details = ex.Message });
+        }
+    }
+
+    [HttpDelete("{id}")]
+    public IActionResult DeleteMovie(int id)
+    {
+        try
+        {
+            var movie = Movies.FirstOrDefault(m => m.Id == id);
+            if (movie == null)
+            {
+                return NotFound(new { message = "Nie znaleziono filmu do usunięcia." });
+            }
+
+            Movies.Remove(movie);
             return NoContent();
         }
-
-        
-        [HttpGet("all")]
-        public async Task<ActionResult<IEnumerable<Movie>>> GetAllMovies()
+        catch (Exception ex)
         {
-            var movies = await _context.Movies.ToListAsync();
-            return Ok(movies);
+            return StatusCode(500, new { message = "Wystąpił błąd serwera.", details = ex.Message });
         }
     }
 }
