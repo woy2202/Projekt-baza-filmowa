@@ -1,77 +1,80 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using FilmowaBaza.Data;
 using FilmowaBaza.Models;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-
 
 namespace FilmowaBaza.Controllers
 {
-    [Route("[controller]/[action]")]
     [ApiController]
-    public class MovieController : ControllerBase
+    [Route("api/[controller]")]
+    public class MoviesController : ControllerBase
     {
-        private readonly MovieContext _movieContext;
+        private readonly MovieContext _context;
 
-        public MovieController(MovieContext movieContext)
+        public MoviesController(MovieContext context)
         {
-            _movieContext = movieContext;
+            _context = context;
         }
 
-        [HttpPost]
-
-        public JsonResult Create(Movie movie)
-        {
-            if (!ModelState.IsValid)
-            {
-                return new JsonResult(BadRequest(ModelState));
-            }
-
-
-            _movieContext.Movies.Add(movie);
-
-            _movieContext.SaveChanges();
-
-            return new JsonResult(Ok(movie));
-
-
-        }
-        [HttpGet("/all")]
-        public JsonResult GetAll()
-        {
-
-            var result = _movieContext.Movies.ToList();
-
-            return new JsonResult(Ok(result));
-
-        }
+        // GET: api/movies
         [HttpGet]
-        public JsonResult Get(int id)
+        public async Task<ActionResult<IEnumerable<Movie>>> GetMovies()
         {
-            var result = _movieContext.Movies.Find(id);
-
-            if (result == null)
-                return new JsonResult(NotFound());
-
-            return new JsonResult(Ok(result));
-
-
+            return await _context.Movies.ToListAsync();
         }
-        [HttpPut("{id}")]
 
-        public JsonResult Edit(int id, Movie movie)
+        // GET: api/movies/{id}
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Movie>> GetMovie(int id)
         {
+            var movie = await _context.Movies.FindAsync(id);
+
+            if (movie == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(movie);
+        }
+
+        // POST: api/movies
+        [HttpPost]
+        public async Task<ActionResult<Movie>> CreateMovie(Movie movie)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            _context.Movies.Add(movie);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetMovie), new { id = movie.Id }, movie);
+        }
+
+        // PUT: api/movies/{id}
+        [HttpPut("{id}")]
+        public async Task<IActionResult> EditMovie(int id, Movie movie)
+        {
+            if (id != movie.Id)
+            {
+                return BadRequest("Movie ID mismatch.");
+            }
 
             if (!ModelState.IsValid)
             {
-                return new JsonResult(BadRequest(ModelState));
+                return BadRequest(ModelState);
             }
 
-            var movieInDb = _movieContext.Movies.Find(movie.Id);
+            var movieInDb = await _context.Movies.FindAsync(id);
 
             if (movieInDb == null)
-                return new JsonResult(NotFound());
+            {
+                return NotFound();
+            }
 
             movieInDb.Title = movie.Title;
             movieInDb.ReleaseYear = movie.ReleaseYear;
@@ -79,25 +82,34 @@ namespace FilmowaBaza.Controllers
             movieInDb.Genre = movie.Genre;
             movieInDb.Country_of_origin = movie.Country_of_origin;
 
-            _movieContext.SaveChanges();
-            return new JsonResult(Ok(movie));
+            await _context.SaveChangesAsync();
 
+            return NoContent();
         }
-        [HttpDelete]
 
-        public JsonResult Delete(int id)
+        // DELETE: api/movies/{id}
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteMovie(int id)
         {
-            var result = _movieContext.Movies.Find(id);
+            var movie = await _context.Movies.FindAsync(id);
 
-            if (result == null)
-                return new JsonResult(NotFound());
+            if (movie == null)
+            {
+                return NotFound();
+            }
 
-            _movieContext.Movies.Remove(result);
+            _context.Movies.Remove(movie);
+            await _context.SaveChangesAsync();
 
-            _movieContext.SaveChanges();
-            return new JsonResult(Ok(result));
+            return NoContent();
+        }
 
-
+        // GET: api/movies/all
+        [HttpGet("all")]
+        public async Task<ActionResult<IEnumerable<Movie>>> GetAllMovies()
+        {
+            var movies = await _context.Movies.ToListAsync();
+            return Ok(movies);
         }
     }
 }
