@@ -19,14 +19,14 @@ namespace FilmowaBaza.Controllers
             _context = context;
         }
 
-        // GET: api/movies
+        
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Movie>>> GetMovies()
         {
             return await _context.Movies.ToListAsync();
         }
 
-        // GET: api/movies/{id}
+        
         [HttpGet("{id}")]
         public async Task<ActionResult<Movie>> GetMovie(int id)
         {
@@ -40,7 +40,7 @@ namespace FilmowaBaza.Controllers
             return Ok(movie);
         }
 
-        // POST: api/movies
+        
         [HttpPost]
         public async Task<ActionResult<Movie>> CreateMovie(Movie movie)
         {
@@ -49,14 +49,22 @@ namespace FilmowaBaza.Controllers
                 return BadRequest(ModelState);
             }
 
-            _context.Movies.Add(movie);
+            _context.Movies.Add(new Movie
+            {
+                Title = movie.Title,
+                ReleaseYear = movie.ReleaseYear,
+                Director = movie.Director,
+                Genre = movie.Genre,
+                Country_of_origin = movie.Country_of_origin,
+                PosterUrl = movie.PosterUrl 
+            });
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetMovie), new { id = movie.Id }, movie);
         }
 
-        // PUT: api/movies/{id}
-        [HttpPut("{id}")]
+
+        
         public async Task<IActionResult> EditMovie(int id, Movie movie)
         {
             if (id != movie.Id)
@@ -87,7 +95,7 @@ namespace FilmowaBaza.Controllers
             return NoContent();
         }
 
-        // DELETE: api/movies/{id}
+        
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteMovie(int id)
         {
@@ -104,7 +112,7 @@ namespace FilmowaBaza.Controllers
             return NoContent();
         }
 
-        // GET: api/movies/all
+        
         [HttpGet("all")]
         public async Task<ActionResult<IEnumerable<Movie>>> GetAllMovies()
         {
