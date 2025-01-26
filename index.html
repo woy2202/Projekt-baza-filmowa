@@ -7,6 +7,15 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.5.3/js/bootstrap.min.js" integrity="sha512-8qmis31OQi6hIRgvkht0s6mCOittjMa9GMqtK9hes5iEQBQE/Ca6yGE5FsW36vyipGoWQswBj/QBm2JR086Rkw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/4.5.3/css/bootstrap.min.css" integrity="sha512-oc9+XSs1H243/FRN9Rw62Fn8EtxjEYWHXRvjS43YtueEewbS6ObfXcJNyohjHqVKFPoXXUxwc+q1K7Dee6vv9g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <title>Baza filmowa - ASP.Net Core Web Api</title>
+    <style>
+        .movie-poster {
+            width: 150px; /* Stała szerokość */
+            height: 220px; /* Stała wysokość */
+            object-fit: cover; /* Dopasowanie obrazu */
+            margin-bottom: 10px; /* Odstęp między plakatem a tekstem */
+            border-radius: 8px; /* Zaokrąglone rogi */
+        }
+    </style>
 </head>
 <body>
     <div class="container mt-5">
@@ -36,6 +45,10 @@
                     <label for="countryOfOrigin">Kraj produkcji</label>
                     <input type="text" class="form-control" id="countryOfOrigin" required>
                 </div>
+                <div class="form-group">
+                    <label for="posterUrl">Link do plakatu</label>
+                    <input type="url" class="form-control" id="posterUrl" required>
+                </div>
                 <button type="submit" class="btn btn-primary">Dodaj film</button>
             </form>
         </div>
@@ -52,6 +65,7 @@
                         movies.forEach(function(movie) {
                             $('#movie-list').append(`
                                 <li class="list-group-item">
+                                    <img src="${movie.posterUrl}" alt="Plakat filmu" class="movie-poster"><br>
                                     <strong>${movie.title}</strong> (${movie.releaseYear})<br>
                                     Reżyser: ${movie.director}<br>
                                     Gatunek: ${movie.genre}<br>
@@ -78,7 +92,8 @@
                     releaseYear: $('#releaseYear').val(),
                     director: $('#director').val(),
                     genre: $('#genre').val(),
-                    country_of_origin: $('#countryOfOrigin').val()
+                    country_of_origin: $('#countryOfOrigin').val(),
+                    posterUrl: $('#posterUrl').val()
                 };
 
                 $.ajax({
@@ -102,8 +117,9 @@
                 const newDirector = prompt("Nowy reżyser:");
                 const newGenre = prompt("Nowy gatunek:");
                 const newCountryOfOrigin = prompt("Nowy kraj produkcji:");
+                const newPosterUrl = prompt("Nowy link do plakatu:");
 
-                if (newTitle && newReleaseYear && newDirector && newGenre && newCountryOfOrigin) {
+                if (newTitle && newReleaseYear && newDirector && newGenre && newCountryOfOrigin && newPosterUrl) {
                     $.ajax({
                         url: `https://localhost:7117/api/Movies/${id}`,
                         method: 'PUT',
@@ -114,7 +130,8 @@
                             releaseYear: newReleaseYear,
                             director: newDirector,
                             genre: newGenre,
-                            country_of_origin: newCountryOfOrigin
+                            country_of_origin: newCountryOfOrigin,
+                            posterUrl: newPosterUrl
                         }),
                         success: function() {
                             fetchMovies();
